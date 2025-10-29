@@ -1,0 +1,14 @@
+<!doctype html>
+<html>
+<body>
+  <h2>Create Habit</h2>
+  <form method="post">{% csrf_token %}
+    <label>Title</label><br>
+    <input name="title" required><br>
+    <label>Description</label><br>
+    <textarea name="description"></textarea><br>
+    <button type="submit">Create</button>
+  </form>
+  <a href="{% url 'dashboard' %}">Back</a>
+</body>
+</html>
