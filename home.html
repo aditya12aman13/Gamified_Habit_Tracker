@@ -1,0 +1,134 @@
+{% load static %}
+{% load habit_extras %}
+
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: #f5f7fa;
+    }
+    .profile-card {
+      background: linear-gradient(135deg, #4b6cb7, #182848);
+      color: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .habit-card:hover {
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+      transition: 0.3s;
+    }
+    .week-box {
+      width: 13%;
+      padding: 5px 0;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+
+<body class="p-4">
+
+<div class="container">
+
+  <!-- USER PROFILE HEADER -->
+  <div class="profile-card mb-4 d-flex align-items-center justify-content-between">
+
+    <!-- Left side: Greeting -->
+    <div>
+      <h2 class="fw-bold mb-0">👋 Hello, {{ request.user.username }}</h2>
+      <small>Track your habits and grow every day</small>
+    </div>
+
+    <!-- Right side: Avatar + Logout -->
+    <div class="d-flex align-items-center">
+      <img src="https://cdn-icons-png.flaticon.com/512/9131/9131529.png"
+           width="65" height="65" class="rounded-circle border border-light me-3">
+
+      <!-- LOGOUT BUTTON -->
+      <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm px-3">
+        Logout
+      </a>
+    </div>
+
+  </div>
+
+  <!-- LEVEL CARD -->
+  <div class="card shadow-sm p-3 mb-4 text-center bg-dark text-light rounded-4">
+    <h2 class="fw-bold">🏆 Level {{ level }}</h2>
+    <h5>Total Points: {{ total_points }}</h5>
+
+    <div class="progress mt-3" style="height: 20px;">
+      <div class="progress-bar bg-warning"
+           role="progressbar"
+           style="width: {{ progress_to_next }}%;"
+           aria-valuenow="{{ progress_to_next }}" aria-valuemin="0" aria-valuemax="100">
+        {{ progress_to_next }}%
+      </div>
+    </div>
+
+    <small class="text-light mt-2">Next level in {{ next_level_points }} pts</small>
+  </div>
+
+  <!-- CREATE HABIT BUTTON -->
+  <div class="text-end mb-3">
+    <a class="btn btn-primary px-4" href="{% url 'create_habit' %}">+ Create Habit</a>
+  </div>
+
+  <!-- HABIT LIST -->
+  {% for habit in habits %}
+    <div class="card habit-card mb-3 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h4 class="fw-bold">{{ habit.title }}</h4>
+            <p class="text-muted mb-1">{{ habit.description }}</p>
+            <span class="badge bg-primary">Points: {{ habit.points }}</span>
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- WEEKLY VIEW -->
+        <div class="d-flex justify-content-between text-center mb-3">
+          {% for day in week_days %}
+            {% with habit.entries.all|get_entry_for_date:day as entry %}
+              <div class="week-box bg-light border">
+                <small class="fw-bold">{{ day|date:"D" }}</small><br>
+                {% if entry and entry.done %}
+                  <span class="badge bg-success">✓</span>
+                {% else %}
+                  <span class="badge bg-secondary">✗</span>
+                {% endif %}
+              </div>
+            {% endwith %}
+          {% endfor %}
+        </div>
+
+        <!-- MARK DONE BUTTON -->
+        <form method="post" action="{% url 'toggle_done' habit.id %}" class="text-end">
+          {% csrf_token %}
+          {% with habit.entries.all|get_entry_for_date:today as today_entry %}
+            {% if today_entry and today_entry.done %}
+              <button class="btn btn-success">Done Today ✓</button>
+            {% else %}
+              <button class="btn btn-outline-secondary">Mark Done Today</button>
+            {% endif %}
+          {% endwith %}
+        </form>
+
+      </div>
+    </div>
+
+  {% empty %}
+    <p class="text-center text-muted mt-4">No habits yet — create your first one.</p>
+  {% endfor %}
+
+</div>
+
+</body>
+</html>
